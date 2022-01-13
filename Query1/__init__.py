@@ -3,7 +3,7 @@ from py2neo import Graph
 from py2neo.bulk import create_nodes, create_relationships
 from py2neo.data import Node
 import os
-import pypyodbc
+import pyodbc
 import azure.functions as func
 
 
@@ -37,14 +37,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         graph = Graph(neo4j_server, auth=(neo4j_user, neo4j_password))
         graph.run("MATCH (n:Test) RETURN n")
 
-        try:
-            logging.info("Test de connexion avec pyodbc...")
-            with pypyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT 1")
-        except:
-            errorMessage = "Erreur de connexion a la base SQL"
-    except Exception as error:
+        # try:
+        #     logging.info("Test de connexion avec pyodbc...")
+        #     with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as conn:
+        #         cursor = conn.cursor()
+        #         cursor.execute("SELECT 1")
+        # except:
+        #     errorMessage = "Erreur de connexion a la base SQL"
+    except:
         errorMessage = "Erreur de connexion a la base Neo4j"
         
     finalMessage = "Le parametre name n'a pas ete fourni lors de l'appel."
