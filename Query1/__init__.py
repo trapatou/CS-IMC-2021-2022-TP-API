@@ -3,7 +3,7 @@ from py2neo import Graph
 from py2neo.bulk import create_nodes, create_relationships
 from py2neo.data import Node
 import os
-import pyodbc
+import pypyodbc
 import azure.functions as func
 
 
@@ -39,7 +39,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         try:
             logging.info("Test de connexion avec pyodbc...")
-            with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as conn:
+            with pypyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as conn:
                 cursor = conn.cursor()
                 cursor.execute("SELECT 1")
         except:
