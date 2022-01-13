@@ -3,7 +3,7 @@ from py2neo import Graph
 from py2neo.bulk import create_nodes, create_relationships
 from py2neo.data import Node
 import os
-import pyodbc
+import pyodbc as pyodbc
 import azure.functions as func
 
 
@@ -33,16 +33,25 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse("Au moins une des variables d'environnement n'a pas été initialisée.", status_code=500)
         
     errorMessage = ""
+    dataString = ""
     try:
         logging.info("Test de connexion avec py2neo...")
         graph = Graph(neo4j_server, auth=(neo4j_user, neo4j_password))
-        graph.run("MATCH (n:Test) RETURN n")
+        producers = graph.run("MATCH (n:Name)-[:PRODUCED]->(t:Title) WHERE t.primaryTitle CONTAINS 'Spider-Man' RETURN DISTINCT n.nconst, n.primaryName LIMIT 3")
+        for producer in producers:
+            dataString += f"CYPHER: nconst={producer['n.nconst']}, primaryName={producer['n.primaryName']}\n"
 
         try:
             logging.info("Test de connexion avec pyodbc...")
             with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT 1")
+                cursor.execute("SELECT TOP(3) tconst, primaryTitle, averageRating FROM [dbo].[tTitles] ORDER BY averageRating DESC")
+
+                rows = cursor.fetchall()
+                for row in rows:
+                    dataString += f"SQL: tconst={row[0]}, primaryTitle={row[1]}, averageRating={row[2]}\n"
+
+
         except:
             errorMessage = "Erreur de connexion a la base SQL"
     except:
@@ -50,13 +59,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
     
     if name:
-        nameMessage = f"Hello, {name}!"
+        nameMessage = f"Hello, {name}!\n"
     else:
-        nameMessage = "Le parametre 'name' n'a pas ete fourni lors de l'appel."
+        nameMessage = "Le parametre 'name' n'a pas ete fourni lors de l'appel.\n"
     
-    if errorMessage is None:
-        return func.HttpResponse(nameMessage + errorMessage, status_code=500)
+    if errorMessage != "":
+        return func.HttpResponse(dataString + nameMessage + errorMessage, status_code=500)
 
     else:
-        finalMessage = nameMessage + "Connexions réussies a Neo4j et SQL!"
-        return func.HttpResponse(finalMessage + " Connexions réussies a Neo4j et SQL!")
+        return func.HttpResponse(dataString + " Connexions réussies a Neo4j et SQL!")

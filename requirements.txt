@@ -1,4 +1,3 @@
-azure-functions==1.8.0
 certifi==2021.10.8
 interchange==2021.0.4
 monotonic==1.6
